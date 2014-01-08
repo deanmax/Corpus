@@ -10,13 +10,13 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import javax.swing.*;
-
 import java.awt.Dimension;
 import java.awt.event.*;
 
 public class Search {
 	JTextArea textArea;
 	JTextField text;
+	int fileCt, rfileCt, wordAppearCt, rate = 0;
 	
 	//===============
 	// Logic control
@@ -58,12 +58,17 @@ public class Search {
 	
 	class Button_Listener implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
+			textArea.setText("");
 			// Walk thru mainDir directory
 			try {
 				Files.walkFileTree(rootDir, new MatchCont());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			textArea.append("---\n");
+			textArea.append("Related file count: " + rfileCt + "\n");
+			textArea.append("Word appearance count: " + wordAppearCt + "\n");
+			textArea.append("Show up rate: " + (float)(rfileCt / fileCt * 100) + "%\n");
 		}
 	}
 	
@@ -78,10 +83,17 @@ public class Search {
         public FileVisitResult visitFile(Path path, BasicFileAttributes mainAtts)
                 throws IOException {
 
+        	fileCt++;
         	List<String> Lines = Files.readAllLines(path, StandardCharsets.ISO_8859_1);
         	
+        	String lastPath = "";
         	for (String line : Lines) {
         		if (pattern.matcher(line).matches()) {
+        			if (lastPath != path.toString()) {
+        				rfileCt++;
+        				lastPath = path.toString();
+        			}
+        			wordAppearCt++;
         			textArea.append(path.toString() + ":\n");
         			textArea.append("\t" + line + "\n\n");
         			//System.out.println(path.toString() + ":");
